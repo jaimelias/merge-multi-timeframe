@@ -1,0 +1,32 @@
+{
+  "name": "merge-multi-timeframe",
+  "version": "1.0.0",
+  "description": "This library leverages a \"target\" property to smartly correlate diverse datasets—whether you're merging multi-timeframe arrays of stock prices, crypto trends, ETF indexes, or even weather reports. It precomputes timestamps and breaks large datasets into smaller chunks, then uses an efficient two-pointer approach to align entries across different intervals (like 1d, 1h, 5m, etc.) seamlessly. The result is a unified, time-synchronized dataset that makes it easy to analyze trends and correlations, helping you turn raw data into actionable insights quickly and effectively.",
+  "keywords": [
+    "two-pointer",
+    "search",
+    "ohlcv",
+    "data",
+    "science",
+    "trading",
+    "multi-timeframe",
+    "correlation",
+    "array",
+    "merge"
+  ],
+  "homepage": "https://github.com/jaimelias/merge-multi-timeframe#readme",
+  "bugs": {
+    "url": "https://github.com/jaimelias/merge-multi-timeframe/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jaimelias/merge-multi-timeframe.git"
+  },
+  "license": "ISC",
+  "author": "jaimelias.com",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test.js"
+  }
+}
