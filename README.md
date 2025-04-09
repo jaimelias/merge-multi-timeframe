@@ -58,6 +58,11 @@ const mergedData = mergeMultiTimeframes({
 console.log(mergedData);
 ```
 
+Output:
+```json
+[{"_nvda1d_date":"2025-04-08 08:00:00","_nvda1d_close":20,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 09:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 10:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 11:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199}]
+```
+
 ---
 
 ## API
@@ -84,7 +89,7 @@ Merges multiple time-series arrays based on a common date interval.
 #### Returns
 
 - **Array**  
-  An array of merged objects. The merged objects will have properties from the base array prefixed with `_<baseKey>_` and from other arrays with `_<sourceKey>_`.
+  An array of merged objects. The merged objects will have properties from the base array prefixed with `_<baseKey>_`.
 
 #### Error Handling
 

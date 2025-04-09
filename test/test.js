@@ -7,4 +7,4 @@ const inputObj = {
 
 const mergedArr = mergeMultiTimeframes({inputObj, chunkSize: 1000, target: 'date'})
 
-console.log(mergedArr)
+console.log(JSON.stringify(mergedArr))
