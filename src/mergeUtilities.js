@@ -16,7 +16,7 @@ export const getCommonDateDistancePrecomputed = (arr, keyName, maxFrequencySize)
   }
 
   // Check if the maximum frequency is lower than our required threshold (arr.length / 2)
-  if (maxCount < (arr.length / 2)) {
+  if (maxCount < 1) {
     throw new Error(`Date distance cannot be determined: frequency below threshold. Please add more row to "inputObj[${keyName}]".`);
   }
   
