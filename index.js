@@ -9,7 +9,7 @@ The mergeMultiTimeframes function selects the array with the shortest interval b
 
 Arrays in inputObj must be sorted in ascending order, with the most recent items at the end.
 
-Each array’s target can be a Date object, a millisecond timestamp, a second timestamp, or a valid date string (millisecond timestamps are recommended).
+Each array’s target value can be a Date object, a millisecond timestamp, a second timestamp, or a valid date string (millisecond timestamps are recommended).
 
 All arrays must have at least 2 items to calculate the distances a asign priorities (10 arrays minimum recommended). 
 */
@@ -22,8 +22,7 @@ export const mergeMultiTimeframes = ({inputObj, target = 'date', chunkSize = 100
     const keyNameDistances = {};
   
     // === Precompute timestamps for all rows ===
-    for (const keyName in inputObj) {
-      const arrObj = inputObj[keyName];
+    for (const [keyName, arrObj] of Object.entries(inputObj)) {
   
       // Determine the largest keyName (by count) for the primary loop.
       if (arrObj.length > largestDistanceTotal) {
@@ -57,8 +56,8 @@ export const mergeMultiTimeframes = ({inputObj, target = 'date', chunkSize = 100
     }
   
     // === Compute common date distances using precomputed timestamps ===
-    for (const keyName in inputObj) {
-      keyNameDistances[keyName] = getCommonDateDistancePrecomputed(inputObj[keyName], keyName);
+    for (const [keyName, arrObj] of Object.entries(inputObj)) {
+      keyNameDistances[keyName] = getCommonDateDistancePrecomputed(arrObj, keyName);
     }
   
     // This will contain the merged rows.
