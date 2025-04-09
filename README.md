@@ -2,11 +2,6 @@
 
 A utility for merging multiple arrays of sorted ascending time-series data based on their common date intervals. This package intelligently selects the array with the shortest common interval as the base and then aligns data from other arrays using an efficient two-pointer approach. Each merged property is prefixed with its source key for traceability.
 
-```markdown
-# merge-multi-timeframe
-
-A utility for merging multiple arrays of time-series data based on their common date intervals. This package intelligently selects the array with the shortest common interval as the base and then aligns data from other arrays using an efficient two-pointer approach. Each merged property is prefixed with its source key for traceability.
-
 ---
 
 ## Features
@@ -59,6 +54,7 @@ console.log(mergedData);
 ```
 
 Output:
+
 ```json
 [{"_nvda1d_date":"2025-04-08 08:00:00","_nvda1d_close":20,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 09:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 10:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 11:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199}]
 ```
