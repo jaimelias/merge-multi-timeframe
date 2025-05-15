@@ -1,6 +1,6 @@
 {
   "name": "merge-multi-timeframe",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "A utility for merging multiple arrays of sorted ascending time-series data based on their common date intervals. This package intelligently selects the array with the shortest common interval as the base and then aligns data from other arrays using an efficient two-pointer approach.",
   "keywords": [
     "two-pointer",
