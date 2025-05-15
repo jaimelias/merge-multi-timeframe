@@ -67,8 +67,10 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   // === Select the base array as the one with the shortest common date interval ===
   let baseKey = Object.keys(keyNameDistances)[0];
-  for (const keyName in keyNameDistances) {
-    if (keyNameDistances[keyName] < keyNameDistances[baseKey]) {
+  let baseDistance = keyNameDistances[baseKey];
+
+  for (const [keyName, thisDistance] of Object.entries(keyNameDistances)) {
+    if (thisDistance < baseDistance) {
       baseKey = keyName;
     }
   }
@@ -86,12 +88,17 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   // Helper: chunk an array into subarrays of a given size.
   const chunkArray = (arr, size) => {
-    const chunks = [];
-    for (let i = 0; i < arr.length; i += size) {
-      chunks.push(arr.slice(i, i + size));
+    const length = arr.length
+    const count  = Math.ceil(length / size)
+    const result = new Array(count)
+    let start    = 0;
+
+    for (let i = 0; i < count; i++, start += size) {
+      result[i] = arr.slice(start, start + size)
     }
-    return chunks;
-  };
+
+    return result
+  }
 
   // Helper: get the current element based on a pointer in the nested chunks.
   const getCurrentRow = (chunks, pointer) => {
