@@ -1,10 +1,31 @@
+import { promises as fs } from 'fs';
+import path from 'path';
 import { mergeMultiTimeframes } from "../index.js";
 
-const inputObj = {
-    nvda1d: [{date: '2025-04-08 08:00:00', close: 20}, {date: '2025-04-08 09:00:00', close: 21}, {date: '2025-04-08 10:00:00', close: 21}, {date: '2025-04-08 11:00:00', close: 21}],
-    spy1d: [{date: '2025-04-07', close: 199}, {date: '2025-04-08', close: 199}],
-} 
+export const loadFile = async ({fileName, pathName = 'test/datasets'}) => {
+    try {
+        fileName = fileName.toLowerCase()
+        const parsedPathName = path.join(process.cwd(), pathName, fileName);
+        const data = await fs.readFile(parsedPathName, 'utf8');
+        console.log(`File ${pathName}/${fileName} loaded!`);
+        return JSON.parse(data); // Optionally return the file content for further processing
+    } catch (err) {
+        console.log(`Error reading file locally ${pathName}/${fileName}`)
+        return false
+    }
+}
 
-const mergedArr = mergeMultiTimeframes({inputObj, chunkSize: 1000, target: 'date'})
+const init = async () => {
+    const inputObj = {
+        btc_1d: await loadFile({fileName: 'btc-2000.json'}),
+        btc_1h: await loadFile({fileName: 'btc-10000.json'}),
+        btc_5m: await loadFile({fileName: 'btc-100000.json'}),
+        dxy_1d: await loadFile({fileName: 'dxy-2000.json'}),
+    } 
 
-console.log(JSON.stringify(mergedArr))
+    const mergedArr = mergeMultiTimeframes({inputObj, chunkSize: 1000, target: 'date'})
+
+    console.log(mergedArr.slice(-5))
+}
+
+init()

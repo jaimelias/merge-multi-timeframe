@@ -20,6 +20,12 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
   validateInputObj(inputObj);
   const keyNameDistances = {};
 
+  // inside mergeMultiTimeframes, *before* your primary‐row loop
+  const allSeries = Object.keys(inputObj);
+  const sampleProps = Object.keys(inputObj[allSeries[0]][0]).filter(k => k !== target);
+  // e.g. ['open','high','low','close','volume','date']
+  const expectedKeyCount = allSeries.length * (sampleProps.length + 1); //+1 includes _mill
+
   // === Precompute timestamps for all rows ===
   for (const [keyName, arrObj] of Object.entries(inputObj)) {
     validateArrObj(arrObj, keyName, target);
@@ -162,13 +168,11 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
         }
       }
 
-      if (mergedRow) {
+      if (mergedRow && Object.keys(mergedRow).length === expectedKeyCount) {
         baseArrObj.push(mergedRow);
       }
     }
   }
-
-  // --- End of Modified Merging Process ---
 
   return baseArrObj;
 };

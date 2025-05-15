@@ -1,7 +1,7 @@
 {
   "name": "merge-multi-timeframe",
-  "version": "1.0.2",
-  "description": "This library leverages a \"target\" property to smartly correlate diverse datasets—whether you're merging multi-timeframe arrays of stock prices, crypto trends, ETF indexes, or even weather reports. It precomputes timestamps and breaks large datasets into smaller chunks, then uses an efficient two-pointer approach to align entries across different intervals (like 1d, 1h, 5m, etc.) seamlessly. The result is a unified, time-synchronized dataset that makes it easy to analyze trends and correlations, helping you turn raw data into actionable insights quickly and effectively.",
+  "version": "1.0.4",
+  "description": "A utility for merging multiple arrays of sorted ascending time-series data based on their common date intervals. This package intelligently selects the array with the shortest common interval as the base and then aligns data from other arrays using an efficient two-pointer approach.",
   "keywords": [
     "two-pointer",
     "search",
