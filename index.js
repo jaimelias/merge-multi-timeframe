@@ -19,12 +19,14 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   validateInputObj(inputObj);
   const keyNameDistances = {};
+
+  // inside mergeMultiTimeframes, *before* your primary‐row loop
+
   let expectedKeyCount = 0
 
   // === Precompute timestamps for all rows ===
   for (const [keyName, arrObj] of Object.entries(inputObj)) {
     validateArrObj(arrObj, keyName, target);
-
 
     const targetVal0 = arrObj[0][target];
     const formatterName = selectDateFormatter(targetVal0);
@@ -55,6 +57,7 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
     }
 
     expectedKeyCount += Object.keys(arrObj[0]).length - 1 //-1 removes _mill count
+
   }
 
   // === Compute common date distances using precomputed timestamps ===
@@ -63,12 +66,9 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
   }
 
   // === Select the base array as the one with the shortest common date interval ===
-
   let baseKey = Object.keys(keyNameDistances)[0];
-  const baseDistance = keyNameDistances[baseKey]
-
-  for (const [keyName, thisDistance] of Object.entries(keyNameDistances)) {
-    if (thisDistance < baseDistance) {
+  for (const keyName in keyNameDistances) {
+    if (keyNameDistances[keyName] < keyNameDistances[baseKey]) {
       baseKey = keyName;
     }
   }
@@ -86,14 +86,10 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   // Helper: chunk an array into subarrays of a given size.
   const chunkArray = (arr, size) => {
-    const len = arr.length;
-    const count = Math.ceil(len / size);
-    const chunks = new Array(count);
-    
-    for (let i = 0, j = 0; i < len; i += size, j++) {
-      chunks[j] = arr.slice(i, i + size);
+    const chunks = [];
+    for (let i = 0; i < arr.length; i += size) {
+      chunks.push(arr.slice(i, i + size));
     }
-
     return chunks;
   };
 
