@@ -19,16 +19,12 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   validateInputObj(inputObj);
   const keyNameDistances = {};
-
-  // inside mergeMultiTimeframes, *before* your primary‐row loop
-  const allSeries = Object.keys(inputObj);
-  const sampleProps = Object.keys(inputObj[allSeries[0]][0]).filter(k => k !== target);
-  // e.g. ['open','high','low','close','volume','date']
-  const expectedKeyCount = allSeries.length * (sampleProps.length + 1); //+1 includes _mill
+  let expectedKeyCount = 0
 
   // === Precompute timestamps for all rows ===
   for (const [keyName, arrObj] of Object.entries(inputObj)) {
     validateArrObj(arrObj, keyName, target);
+
 
     const targetVal0 = arrObj[0][target];
     const formatterName = selectDateFormatter(targetVal0);
@@ -58,6 +54,7 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
       }
     }
 
+    expectedKeyCount += Object.keys(arrObj[0]).length - 1 //-1 removes _mill count
   }
 
   // === Compute common date distances using precomputed timestamps ===
@@ -66,8 +63,9 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
   }
 
   // === Select the base array as the one with the shortest common date interval ===
+
   let baseKey = Object.keys(keyNameDistances)[0];
-  let baseDistance = keyNameDistances[baseKey];
+  const baseDistance = keyNameDistances[baseKey]
 
   for (const [keyName, thisDistance] of Object.entries(keyNameDistances)) {
     if (thisDistance < baseDistance) {
@@ -88,17 +86,16 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   // Helper: chunk an array into subarrays of a given size.
   const chunkArray = (arr, size) => {
-    const length = arr.length
-    const count  = Math.ceil(length / size)
-    const result = new Array(count)
-    let start    = 0;
-
-    for (let i = 0; i < count; i++, start += size) {
-      result[i] = arr.slice(start, start + size)
+    const len = arr.length;
+    const count = Math.ceil(len / size);
+    const chunks = new Array(count);
+    
+    for (let i = 0, j = 0; i < len; i += size, j++) {
+      chunks[j] = arr.slice(i, i + size);
     }
 
-    return result
-  }
+    return chunks;
+  };
 
   // Helper: get the current element based on a pointer in the nested chunks.
   const getCurrentRow = (chunks, pointer) => {
