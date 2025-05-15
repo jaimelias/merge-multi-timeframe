@@ -66,9 +66,11 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
   }
 
   // === Select the base array as the one with the shortest common date interval ===
-  let baseKey = Object.keys(keyNameDistances)[0];
-  for (const keyName in keyNameDistances) {
-    if (keyNameDistances[keyName] < keyNameDistances[baseKey]) {
+  let baseKey = Object.keys(keyNameDistances)[0]
+  const cachedDistances = keyNameDistances[baseKey]
+
+  for (const [keyName, thisDistance] of Object.entries(keyNameDistances)) {
+    if (thisDistance < cachedDistances) {
       baseKey = keyName;
     }
   }
