@@ -25,7 +25,7 @@ const init = async () => {
 
     const mergedArr = mergeMultiTimeframes({inputObj, chunkSize: 1000, target: 'date'})
 
-    console.log(mergedArr.length)
+    console.log(mergedArr)
 }
 
 init()

@@ -67,10 +67,16 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   // === Select the base array as the one with the shortest common date interval ===
   // === Select the base array as the one with the shortest common date interval ===
-  let baseKey = Object.keys(keyNameDistances)[0];
-  for (const keyName in keyNameDistances) {
-    if (keyNameDistances[keyName] < keyNameDistances[baseKey]) {
-      baseKey = keyName;
+  const distanceKeys = Object.keys(keyNameDistances)
+  let baseKey = distanceKeys[0]
+  let minDistance = keyNameDistances[baseKey]
+
+  for (let i = 1; i < distanceKeys.length; i++) {
+    const key = distanceKeys[i]
+    const dist = keyNameDistances[key]
+    if (dist < minDistance) {
+      minDistance = dist
+      baseKey = key
     }
   }
 
@@ -87,12 +93,25 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
 
   // Helper: chunk an array into subarrays of a given size.
   const chunkArray = (arr, size) => {
-    const chunks = [];
-    for (let i = 0; i < arr.length; i += size) {
-      chunks.push(arr.slice(i, i + size));
+    const len = arr.length;
+    const count = Math.ceil(len / size);
+    const chunks = new Array(count);
+    
+    for (let i = 0, offset = 0; i < count; i++, offset += size) {
+      const end = offset + size > len ? len : offset + size;
+      const chunkLen = end - offset;
+      const chunk = new Array(chunkLen);
+      
+      for (let j = 0; j < chunkLen; j++) {
+        chunk[j] = arr[offset + j];
+      }
+      
+      chunks[i] = chunk;
     }
+    
     return chunks;
   };
+
 
   // Helper: get the current element based on a pointer in the nested chunks.
   const getCurrentRow = (chunks, pointer) => {
@@ -161,7 +180,7 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
             // Add secondary row properties with the keyName prefix.
             for (const [k, v] of Object.entries(tempSecRow)) {
               if (k === '_mill') continue;
-              mergedRow[`_${keyName}_${k}`] = v;
+              mergedRow[`${keyName}_${k}`] = v;
             }
           }
           advancePointer(tempPointer, secChunks);
