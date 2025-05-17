@@ -174,7 +174,7 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
               mergedRow = {};
               for (const [k, v] of Object.entries(primaryRow)) {
                 if (k === '_mill') continue;
-                mergedRow[`_${baseKey}_${k}`] = v;
+                mergedRow[`${baseKey}_${k}`] = v;
               }
             }
             // Add secondary row properties with the keyName prefix.
