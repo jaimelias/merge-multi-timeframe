@@ -1,14 +1,17 @@
 export const validateInputObj = inputObj => {
-    if(typeof inputObj !== 'object')
+    if(typeof inputObj !== 'object' && inputObj)
     {
         throw new Error('Invalid param. "inputObj" must be and object.')
     }
-    if(Object.keys(inputObj).length < 2)
+
+    const len = Object.keys(inputObj).length
+
+    if(len < 1)
     {
-        throw new Error('Invalid param. "inputObj" must have at least 2 object with arrays.')
+        throw new Error('Invalid param. "inputObj" must have at least 1 object with arrays.')
     }
 
-    return true
+    return len
 } 
 
 export const validateArrObj = (arrObj, keyName, target) => {

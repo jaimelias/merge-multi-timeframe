@@ -1,6 +1,7 @@
 import { getCommonDateDistancePrecomputed } from "./src/mergeUtilities.js";
 import { dateFormaters, selectDateFormatter } from "./src/dateUtilities.js";
 import { validateInputObj, validateArrObj } from "./src/validators.js";
+import { computedOneObj } from "./src/computeOneObj.js";
 
 /* 
 All merged object properties will be prefixed with _${keyName}_ to denote their source.
@@ -17,7 +18,13 @@ All arrays must have at least 2 items to calculate the distances; 10 arrays mini
 
 export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 1000, maxFrequencySize = 10 }) => {
 
-  validateInputObj(inputObj);
+  const inputObjLen = validateInputObj(inputObj);
+
+  if(inputObjLen === 1)
+  {
+    return computedOneObj(inputObj, chunkSize)
+  }
+
   const keyNameDistances = {};
 
   // inside mergeMultiTimeframes, *before* your primary‐row loop

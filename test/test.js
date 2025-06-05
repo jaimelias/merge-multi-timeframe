@@ -18,9 +18,9 @@ export const loadFile = async ({fileName, pathName = 'test/datasets'}) => {
 const init = async () => {
     const inputObj = {
         btc_1d: await loadFile({fileName: 'btc-2000.json'}),
-        btc_1h: await loadFile({fileName: 'btc-10000.json'}),
-        btc_5m: await loadFile({fileName: 'btc-100000.json'}),
-        dxy_1d: await loadFile({fileName: 'dxy-2000.json'}),
+        //btc_1h: await loadFile({fileName: 'btc-10000.json'}),
+        //btc_5m: await loadFile({fileName: 'btc-100000.json'}),
+        //dxy_1d: await loadFile({fileName: 'dxy-2000.json'}),
     } 
 
     const mergedArr = mergeMultiTimeframes({inputObj, chunkSize: 1000, target: 'date'})
