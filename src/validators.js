@@ -1,18 +1,22 @@
-export const validateInputObj = inputObj => {
-    if(typeof inputObj !== 'object' && inputObj)
-    {
-        throw new Error('Invalid param. "inputObj" must be and object.')
-    }
+export const validateInputObj = (inputObj, keepBaseKey) => {
+  if (typeof inputObj !== 'object' || inputObj === null || Array.isArray(inputObj)) {
+    throw new Error('Invalid param. "inputObj" must be a non-null object.')
+  }
 
-    const len = Object.keys(inputObj).length
+  const keys = Object.keys(inputObj)
+  const len = keys.length
 
-    if(len < 1)
-    {
-        throw new Error('Invalid param. "inputObj" must have at least 1 object with arrays.')
-    }
+  if (len < 1) {
+    throw new Error('Invalid param. "inputObj" must have at least one key.')
+  }
 
-    return len
-} 
+  if (typeof keepBaseKey !== 'boolean') {
+    throw new Error('Invalid param. "keepBaseKey" must be boolean.')
+  }
+
+  return len
+}
+
 
 export const validateArrObj = (arrObj, keyName, target) => {
 

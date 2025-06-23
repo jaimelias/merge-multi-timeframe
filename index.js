@@ -16,9 +16,11 @@ or a valid date string (millisecond timestamps are recommended).
 All arrays must have at least 2 items to calculate the distances; 10 arrays minimum is recommended.
 */
 
-export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 1000, maxFrequencySize = 10 }) => {
+export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 1000, maxFrequencySize = 10, keepBaseKey = false }) => {
 
-  const inputObjLen = validateInputObj(inputObj);
+  const inputObjLen = validateInputObj(inputObj, keepBaseKey)
+
+
 
   if(inputObjLen === 1)
   {
@@ -181,7 +183,7 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
               mergedRow = {};
               for (const [k, v] of Object.entries(primaryRow)) {
                 if (k === '_mill') continue;
-                mergedRow[`${baseKey}_${k}`] = v;
+                mergedRow[(keepBaseKey) ? k : `${baseKey}_${k}`] = v;
               }
             }
             // Add secondary row properties with the keyName prefix.
