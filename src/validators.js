@@ -6,8 +6,16 @@ export const validateInputObj = (inputObj, keepBaseKey) => {
   const keys = Object.keys(inputObj)
   const len = keys.length
 
+
+
   if (len < 1) {
     throw new Error('Invalid param. "inputObj" must have at least one key.')
+  }
+
+  const uniqueKeyCount = new Set(keys).size
+
+  if (uniqueKeyCount !== len) {
+    throw new Error('Invalid param. "inputObj" must not contain duplicate keys.')
   }
 
   if (typeof keepBaseKey !== 'boolean') {

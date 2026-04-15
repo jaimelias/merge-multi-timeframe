@@ -89,6 +89,8 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
     }
   }
 
+  const baseIntervalDistance = keyNameDistances[baseKey];
+
   // This will contain the merged rows.
   const baseArrObj = [];
 
@@ -163,11 +165,13 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
       // Process each secondary keyName using two-pointer search.
       for (const [keyName, secChunks] of Object.entries(secondaryChunksMap)) {
         const secIntervalDistance = keyNameDistances[keyName];
+        const secLagDistance = secIntervalDistance > baseIntervalDistance ? secIntervalDistance : 0;
+        const compareMill = primaryMill - secLagDistance;
         const pointer = secondaryPointers[keyName];
 
-        // Advance the global pointer for this secondary keyName if the current row's window is behind primaryMill.
+        // Advance the global pointer for this secondary keyName if the current row's window is behind compareMill.
         let currentSecRow = getCurrentRow(secChunks, pointer);
-        while (currentSecRow && (currentSecRow._mill + secIntervalDistance - 1 < primaryMill)) {
+        while (currentSecRow && (currentSecRow._mill + secIntervalDistance - 1 < compareMill)) {
           advancePointer(pointer, secChunks);
           currentSecRow = getCurrentRow(secChunks, pointer);
         }
@@ -175,9 +179,9 @@ export const mergeMultiTimeframes = ({ inputObj, target = 'date', chunkSize = 10
         // Use a temporary pointer (copying the global pointer state) to check for possible matches.
         const tempPointer = { chunkIndex: pointer.chunkIndex, index: pointer.index };
         let tempSecRow = getCurrentRow(secChunks, tempPointer);
-        while (tempSecRow && tempSecRow._mill <= primaryMill) {
-          // Check if primaryMill falls within the secondary row's time window.
-          if (primaryMill >= tempSecRow._mill && primaryMill <= tempSecRow._mill + secIntervalDistance - 1) {
+        while (tempSecRow && tempSecRow._mill <= compareMill) {
+          // Check if compareMill falls within the secondary row's time window.
+          if (compareMill >= tempSecRow._mill && compareMill <= tempSecRow._mill + secIntervalDistance - 1) {
             // Create the merged row only once per primary row.
             if (!mergedRow) {
               mergedRow = {};

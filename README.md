@@ -9,7 +9,8 @@ A utility for merging multiple arrays of sorted ascending time-series data based
 - **Adaptive Base Selection:** Automatically selects the base array using the shortest common date interval.
 - **Flexible Date Handling:** Supports Date objects, millisecond timestamps, second timestamps, and valid date strings (millisecond timestamps are recommended).
 - **Optimized Merging:** Uses a chunking strategy (default size 1000) combined with a two-pointer search for efficient merging even with large datasets.
-- **Clear Source Identification:** Merged properties are prefixed with `_<sourceKey>_` so you know the origin of each piece of data.
+- **Automatic Closed-Candle Alignment:** Higher timeframes are merged only after they are fully closed (for open-timestamped OHLCV inputs), preventing future-value leakage.
+- **Clear Source Identification:** Merged properties are prefixed with `<sourceKey>_` so you know the origin of each piece of data.
 
 ---
 
@@ -47,7 +48,8 @@ const mergedData = mergeMultiTimeframes({
   inputObj,
   target: 'date',           // The key used for date values in your objects.
   chunkSize: 1000,          // Optional, default is 1000.
-  maxFrequencySize: 10      // Optional, defaults to 10 items for frequency calculation.
+  maxFrequencySize: 10,     // Optional, defaults to 10 items for frequency calculation.
+  keepBaseKey: false        // Optional, default false. If true, base-key prefix is removed.
 });
 
 console.log(mergedData);
@@ -56,7 +58,7 @@ console.log(mergedData);
 Output:
 
 ```json
-[{"_nvda1d_date":"2025-04-08 08:00:00","_nvda1d_close":20,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 09:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 10:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199},{"_nvda1d_date":"2025-04-08 11:00:00","_nvda1d_close":21,"_spy1d_date":"2025-04-08","_spy1d_close":199}]
+[{"nvda1d_date":"2025-04-08 08:00:00","nvda1d_close":20,"spy1d_date":"2025-04-07","spy1d_close":199},{"nvda1d_date":"2025-04-08 09:00:00","nvda1d_close":21,"spy1d_date":"2025-04-07","spy1d_close":199},{"nvda1d_date":"2025-04-08 10:00:00","nvda1d_close":21,"spy1d_date":"2025-04-07","spy1d_close":199},{"nvda1d_date":"2025-04-08 11:00:00","nvda1d_close":21,"spy1d_date":"2025-04-07","spy1d_close":199}]
 ```
 
 ---
@@ -82,10 +84,13 @@ Merges multiple time-series arrays based on a common date interval.
 - **`options.maxFrequencySize`** (number, *optional*, default: `10`)  
   The maximum number of initial rows used to compute the most common date interval (frequency) in each array. This common interval is used to determine the matching window for the two-pointer search.
 
+- **`options.keepBaseKey`** (boolean, *optional*, default: `false`)  
+  If `false`, base-array properties are prefixed with `<baseKey>_` just like secondary arrays. If `true`, base-array properties keep their original field names.
+
 #### Returns
 
 - **Array**  
-  An array of merged objects. The merged objects will have properties from the base array prefixed with `_<baseKey>_`.
+  An array of merged objects. The merged objects will have properties from the base array prefixed with `<baseKey>_` (unless `keepBaseKey` is `true`).
 
 #### Error Handling
 
@@ -94,6 +99,9 @@ Merges multiple time-series arrays based on a common date interval.
 
 - **Date Interval Calculation:**  
   If the computed frequency of date intervals in any array is below half its length (suggesting inconsistent intervals), an error is thrown recommending to add more data to that timeframe.
+
+- **Input Validation:**  
+  If `inputObj` is invalid, if `keepBaseKey` is not boolean, or if duplicate key names are detected, an error is thrown.
 
 ---
 
@@ -110,6 +118,7 @@ Merges multiple time-series arrays based on a common date interval.
 
 4. **Efficient Merging:**  
    The base array and secondary arrays are divided into chunks (using the `chunkSize` parameter). A two-pointer search is then conducted across the arrays to merge rows whose timestamps fall within a computed time window.
+   For secondary arrays with larger intervals than the base array, the merge uses the most recently completed secondary candle (open-timestamped OHLCV assumption), preventing future leaks from in-progress higher-timeframe candles.
 
 5. **Merged Output:**  
    Only if a primary row finds matching secondary rows in all arrays (or at least in the arrays where a match is applicable) is the merged object created. Properties are prefixed with their source key for clarity.
