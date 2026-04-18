@@ -117,10 +117,10 @@ export const mergeMultiTimeframes = ({
   chunkSize = 1000,
   maxFrequencySize = 10,
   keepKey = null,
-  leakproof = true,
+  leakFutureValues,
   undersampleByKey = null
 }) => {
-  const inputObjLen = validateInputObj(inputObj, keepKey, leakproof, undersampleByKey);
+  const inputObjLen = validateInputObj(inputObj, keepKey, leakFutureValues, undersampleByKey);
 
   if (inputObjLen === 1) {
     if (undersampleByKey !== null) {
@@ -220,7 +220,7 @@ export const mergeMultiTimeframes = ({
         const secIntervalDistance = keyNameDistances[keyName];
 
         if (mode === 'undersample') {
-          const windowStart = leakproof ? primaryMill - primaryIntervalDistance : primaryMill;
+          const windowStart = leakFutureValues ? primaryMill : primaryMill - primaryIntervalDistance;
           const windowEnd = windowStart + primaryIntervalDistance - 1;
           const matchedRows = collectRowsInWindow(secChunks, pointer, windowStart, windowEnd);
 
@@ -234,7 +234,7 @@ export const mergeMultiTimeframes = ({
         }
 
         const secLagDistance =
-          leakproof && secIntervalDistance > primaryIntervalDistance ? secIntervalDistance : 0;
+          !leakFutureValues && secIntervalDistance > primaryIntervalDistance ? secIntervalDistance : 0;
         const compareMill = primaryMill - secLagDistance;
         const matchedRow = findSingleMatchRow(secChunks, pointer, secIntervalDistance, compareMill);
 

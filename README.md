@@ -9,8 +9,9 @@ A utility for merging multiple arrays of sorted ascending time-series data based
 - **Adaptive Lower-Timeframe Selection:** Automatically selects the dataset with the shortest common date interval as the base.
 - **Flexible Date Handling:** Supports Date objects, millisecond timestamps, second timestamps, and valid date strings (millisecond timestamps are recommended).
 - **Optimized Merging:** Uses chunking (default size `1000`) plus a two-pointer strategy for large datasets.
-- **Optional Leakproof Alignment:** `leakproof: true` (default) prevents future-value leakage from higher timeframes by aligning with closed-candle availability.
-- **Open-Aligned Mode:** `leakproof: false` aligns by candle open timestamps (can intentionally include future values for backtesting/research workflows).
+- **Controlled Future Leakage:** `leakFutureValues` is a required boolean that explicitly controls alignment mode.
+- **Leakproof Mode:** `leakFutureValues: false` prevents future-value leakage from higher timeframes by aligning with closed-candle availability.
+- **Open-Aligned Mode:** `leakFutureValues: true` aligns by candle open timestamps (can intentionally include future values for backtesting/research workflows).
 - **Selective Key Preservation:** `keepKey` lets you keep original property names for one selected dataset key (base or non-base).
 - **Optional Undersampling:** `undersampleByKey` lets you use a higher-timeframe dataset as output cadence and collect all lower-timeframe values into arrays.
 
@@ -50,7 +51,7 @@ const mergedData = mergeMultiTimeframes({
   chunkSize: 1000,
   maxFrequencySize: 10,
   keepKey: 'nvda1h', // keep original keys for nvda1h only
-  leakproof: true    // default; prevents higher-timeframe future leakage
+  leakFutureValues: false // required: false prevents higher-timeframe future leakage
 });
 
 console.log(mergedData);
@@ -75,11 +76,11 @@ Example output:
 const mergedData = mergeMultiTimeframes({
   inputObj,
   target: 'date',
-  leakproof: false
+  leakFutureValues: true
 });
 ```
 
-With `leakproof: false`, higher-timeframe rows are aligned by their open date/time (instead of the last closed higher-timeframe candle).
+With `leakFutureValues: true`, higher-timeframe rows are aligned by their open date/time (instead of the last closed higher-timeframe candle).
 
 ### Undersample by a higher timeframe
 
@@ -102,7 +103,7 @@ const mergedData = mergeMultiTimeframes({
   target: 'date',
   undersampleByKey: 'btc_2h', // must be a higher-timeframe key
   keepKey: 'btc_2h',
-  leakproof: false
+  leakFutureValues: true
 });
 
 console.log(mergedData);
@@ -155,10 +156,10 @@ Merges multiple time-series arrays based on common date intervals.
   Dataset key whose output properties should keep original names.
   If `null`, all merged properties are prefixed as `<datasetKey>_<field>`.
 
-- **`options.leakproof`** (boolean, optional, default: `true`)
+- **`options.leakFutureValues`** (boolean, required)
   Controls higher-timeframe alignment behavior.
-  `true`: closed-candle alignment (future-leak resistant).
-  `false`: open-date alignment (future values allowed).
+  `false`: closed-candle alignment (future-leak resistant).
+  `true`: open-date alignment (future values allowed).
 
 - **`options.undersampleByKey`** (string or `null`, optional, default: `null`)
   If provided, must be a higher-timeframe key. Output cadence becomes that key.
@@ -174,7 +175,8 @@ Merges multiple time-series arrays based on common date intervals.
 
 - Throws if any array in `inputObj` is not ascending by `target`.
 - Throws if `keepKey` is not `null`/string, is empty, or does not exist in `inputObj`.
-- Throws if `leakproof` is not boolean.
+- Throws if `leakFutureValues` is `undefined` or not boolean.  
+  Expected behavior: `false` prevents future-value leakage (closed-candle alignment), `true` allows future values via open-date alignment.
 - Throws if `undersampleByKey` is not `null`/string, is empty, does not exist in `inputObj`, or points to the lower-timeframe key.
 - Throws if intervals cannot be inferred from provided data.
 
@@ -206,6 +208,13 @@ Merges multiple time-series arrays based on common date intervals.
 
 - Old: `keepBaseKey: true` (only affected base dataset).
 - New: `keepKey: '<datasetKey>'` (can target base or non-base dataset).
+
+`leakproof` was replaced by `leakFutureValues` and is now required.
+
+- Old: `leakproof: true` (future-leak resistant).
+- New: `leakFutureValues: false` (future-leak resistant).
+- Old: `leakproof: false` (open-date alignment).
+- New: `leakFutureValues: true` (open-date alignment).
 
 ---
 
