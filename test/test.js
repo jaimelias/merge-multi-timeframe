@@ -23,9 +23,17 @@ const init = async () => {
         //dxy_1d: await loadFile({fileName: 'dxy-2000.json'}),
     } 
 
-    const mergedArr = mergeMultiTimeframes({inputObj, chunkSize: 1000, target: 'date', keepBaseKey: true})
+    const mergedArr = mergeMultiTimeframes({
+        inputObj,
+        chunkSize: 1000,
+        target: 'date',
+        keepKey: 'btc_1d',
+        leakproof: false,
+        undersampleByKey: 'btc_1d'
+    })
 
-    console.log(mergedArr)
+    console.log(`Merged rows: ${mergedArr.length}`)
+    console.log(mergedArr.slice(0, 2))
 }
 
 init()

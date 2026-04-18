@@ -1,4 +1,4 @@
-export const validateInputObj = (inputObj, keepBaseKey) => {
+export const validateInputObj = (inputObj, keepKey, leakproof, undersampleByKey) => {
   if (typeof inputObj !== 'object' || inputObj === null || Array.isArray(inputObj)) {
     throw new Error('Invalid param. "inputObj" must be a non-null object.')
   }
@@ -18,8 +18,32 @@ export const validateInputObj = (inputObj, keepBaseKey) => {
     throw new Error('Invalid param. "inputObj" must not contain duplicate keys.')
   }
 
-  if (typeof keepBaseKey !== 'boolean') {
-    throw new Error('Invalid param. "keepBaseKey" must be boolean.')
+  if (keepKey !== null && typeof keepKey !== 'string') {
+    throw new Error('Invalid param. "keepKey" must be a string or null.')
+  }
+
+  if (typeof keepKey === 'string' && keepKey.length === 0) {
+    throw new Error('Invalid param. "keepKey" cannot be an empty string.')
+  }
+
+  if (keepKey !== null && !keys.includes(keepKey)) {
+    throw new Error(`Invalid param. "keepKey" value "${keepKey}" does not exist in "inputObj".`)
+  }
+
+  if (typeof leakproof !== 'boolean') {
+    throw new Error('Invalid param. "leakproof" must be boolean.')
+  }
+
+  if (undersampleByKey !== null && typeof undersampleByKey !== 'string') {
+    throw new Error('Invalid param. "undersampleByKey" must be a string or null.')
+  }
+
+  if (typeof undersampleByKey === 'string' && undersampleByKey.length === 0) {
+    throw new Error('Invalid param. "undersampleByKey" cannot be an empty string.')
+  }
+
+  if (undersampleByKey !== null && !keys.includes(undersampleByKey)) {
+    throw new Error(`Invalid param. "undersampleByKey" value "${undersampleByKey}" does not exist in "inputObj".`)
   }
 
   return len

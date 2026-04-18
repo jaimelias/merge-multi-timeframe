@@ -1,22 +1,22 @@
 # merge-multi-timeframe
 
-A utility for merging multiple arrays of sorted ascending time-series data based on their common date intervals. This package intelligently selects the array with the shortest common interval as the base and then aligns data from other arrays using an efficient two-pointer approach. Each merged property is prefixed with its source key for traceability.
+A utility for merging multiple arrays of sorted ascending time-series data based on their common date intervals. This package automatically selects the dataset with the shortest common interval as the lower timeframe base and aligns other datasets with an efficient two-pointer approach.
 
 ---
 
 ## Features
 
-- **Adaptive Base Selection:** Automatically selects the base array using the shortest common date interval.
+- **Adaptive Lower-Timeframe Selection:** Automatically selects the dataset with the shortest common date interval as the base.
 - **Flexible Date Handling:** Supports Date objects, millisecond timestamps, second timestamps, and valid date strings (millisecond timestamps are recommended).
-- **Optimized Merging:** Uses a chunking strategy (default size 1000) combined with a two-pointer search for efficient merging even with large datasets.
-- **Automatic Closed-Candle Alignment:** Higher timeframes are merged only after they are fully closed (for open-timestamped OHLCV inputs), preventing future-value leakage.
-- **Clear Source Identification:** Merged properties are prefixed with `<sourceKey>_` so you know the origin of each piece of data.
+- **Optimized Merging:** Uses chunking (default size `1000`) plus a two-pointer strategy for large datasets.
+- **Optional Leakproof Alignment:** `leakproof: true` (default) prevents future-value leakage from higher timeframes by aligning with closed-candle availability.
+- **Open-Aligned Mode:** `leakproof: false` aligns by candle open timestamps (can intentionally include future values for backtesting/research workflows).
+- **Selective Key Preservation:** `keepKey` lets you keep original property names for one selected dataset key (base or non-base).
+- **Optional Undersampling:** `undersampleByKey` lets you use a higher-timeframe dataset as output cadence and collect all lower-timeframe values into arrays.
 
 ---
 
 ## Installation
-
-Install the package via npm:
 
 ```bash
 npm install merge-multi-timeframe
@@ -26,40 +26,108 @@ npm install merge-multi-timeframe
 
 ## Usage
 
-Below is an example of how to use the package in your project.
+### Standard merge (lower timeframe as output cadence)
 
 ```js
 import { mergeMultiTimeframes } from 'merge-multi-timeframe';
 
 const inputObj = {
-    nvda1d: [
-        {date: '2025-04-08 08:00:00', close: 20}, 
-        {date: '2025-04-08 09:00:00', close: 21}, 
-        {date: '2025-04-08 10:00:00', close: 21}, 
-        {date: '2025-04-08 11:00:00', close: 21}
-    ],
-    spy1d: [
-        {date: '2025-04-07', close: 199}, 
-        {date: '2025-04-08', close: 199}
-    ],
-} 
+  nvda1h: [
+    { date: '2025-04-08 08:00:00', close: 20 },
+    { date: '2025-04-08 09:00:00', close: 21 },
+    { date: '2025-04-08 10:00:00', close: 22 },
+    { date: '2025-04-08 11:00:00', close: 23 }
+  ],
+  spy1d: [
+    { date: '2025-04-07', close: 199 },
+    { date: '2025-04-08', close: 205 }
+  ]
+};
 
 const mergedData = mergeMultiTimeframes({
   inputObj,
-  target: 'date',           // The key used for date values in your objects.
-  chunkSize: 1000,          // Optional, default is 1000.
-  maxFrequencySize: 10,     // Optional, defaults to 10 items for frequency calculation.
-  keepBaseKey: false        // Optional, default false. If true, base-key prefix is removed.
+  target: 'date',
+  chunkSize: 1000,
+  maxFrequencySize: 10,
+  keepKey: 'nvda1h', // keep original keys for nvda1h only
+  leakproof: true    // default; prevents higher-timeframe future leakage
 });
 
 console.log(mergedData);
 ```
 
-Output:
+Example output:
 
 ```json
-[{"nvda1d_date":"2025-04-08 08:00:00","nvda1d_close":20,"spy1d_date":"2025-04-07","spy1d_close":199},{"nvda1d_date":"2025-04-08 09:00:00","nvda1d_close":21,"spy1d_date":"2025-04-07","spy1d_close":199},{"nvda1d_date":"2025-04-08 10:00:00","nvda1d_close":21,"spy1d_date":"2025-04-07","spy1d_close":199},{"nvda1d_date":"2025-04-08 11:00:00","nvda1d_close":21,"spy1d_date":"2025-04-07","spy1d_close":199}]
+[
+  {
+    "date": "2025-04-08 08:00:00",
+    "close": 20,
+    "spy1d_date": "2025-04-07",
+    "spy1d_close": 199
+  }
+]
 ```
+
+### Open-aligned mode (future values allowed)
+
+```js
+const mergedData = mergeMultiTimeframes({
+  inputObj,
+  target: 'date',
+  leakproof: false
+});
+```
+
+With `leakproof: false`, higher-timeframe rows are aligned by their open date/time (instead of the last closed higher-timeframe candle).
+
+### Undersample by a higher timeframe
+
+```js
+const inputObj = {
+  btc_1h: [
+    { date: '2025-04-08 00:00:00', close: 10 },
+    { date: '2025-04-08 01:00:00', close: 11 },
+    { date: '2025-04-08 02:00:00', close: 12 },
+    { date: '2025-04-08 03:00:00', close: 13 }
+  ],
+  btc_2h: [
+    { date: '2025-04-08 00:00:00', close: 100 },
+    { date: '2025-04-08 02:00:00', close: 101 }
+  ]
+};
+
+const mergedData = mergeMultiTimeframes({
+  inputObj,
+  target: 'date',
+  undersampleByKey: 'btc_2h', // must be a higher-timeframe key
+  keepKey: 'btc_2h',
+  leakproof: false
+});
+
+console.log(mergedData);
+```
+
+Example output:
+
+```json
+[
+  {
+    "date": "2025-04-08 00:00:00",
+    "close": 100,
+    "btc_1h_date": [
+      "2025-04-08 00:00:00",
+      "2025-04-08 01:00:00"
+    ],
+    "btc_1h_close": [
+      10,
+      11
+    ]
+  }
+]
+```
+
+When `undersampleByKey` is enabled, lower-timeframe fields are emitted as arrays containing all values in the selected higher-timeframe window.
 
 ---
 
@@ -67,64 +135,80 @@ Output:
 
 ### `mergeMultiTimeframes(options)`
 
-Merges multiple time-series arrays based on a common date interval.
+Merges multiple time-series arrays based on common date intervals.
 
 #### Parameters
 
-- **`options.inputObj`** (Object, **required**)  
-  An object where each property is an array representing a timeframe. Every array should consist of objects that include at least one date property (by default named `"date"`).  
-  **Note:** Each array must be sorted in ascending order (with the most recent items at the end) and contain at least 2 items to calculate the time intervals. For best results, using 10 or more arrays is recommended.
+- **`options.inputObj`** (Object, required)
+  Object where each property is a dataset array (timeframe).
 
-- **`options.target`** (string, *optional*, default: `'date'`)  
-  The property name within each object that represents the timestamp or date.
+- **`options.target`** (string, optional, default: `'date'`)
+  Property name used as timestamp/date.
 
-- **`options.chunkSize`** (number, *optional*, default: `1000`)  
-  The size used to split the arrays into chunks. This helps improve the performance of the two-pointer search algorithm used during merging.
+- **`options.chunkSize`** (number, optional, default: `1000`)
+  Chunk size used by the internal two-pointer merge logic.
 
-- **`options.maxFrequencySize`** (number, *optional*, default: `10`)  
-  The maximum number of initial rows used to compute the most common date interval (frequency) in each array. This common interval is used to determine the matching window for the two-pointer search.
+- **`options.maxFrequencySize`** (number, optional, default: `10`)
+  Number of initial rows used to estimate each dataset interval.
 
-- **`options.keepBaseKey`** (boolean, *optional*, default: `false`)  
-  If `false`, base-array properties are prefixed with `<baseKey>_` just like secondary arrays. If `true`, base-array properties keep their original field names.
+- **`options.keepKey`** (string or `null`, optional, default: `null`)
+  Dataset key whose output properties should keep original names.
+  If `null`, all merged properties are prefixed as `<datasetKey>_<field>`.
+
+- **`options.leakproof`** (boolean, optional, default: `true`)
+  Controls higher-timeframe alignment behavior.
+  `true`: closed-candle alignment (future-leak resistant).
+  `false`: open-date alignment (future values allowed).
+
+- **`options.undersampleByKey`** (string or `null`, optional, default: `null`)
+  If provided, must be a higher-timeframe key. Output cadence becomes that key.
+  Lower-timeframe datasets are collected into arrays per field.
 
 #### Returns
 
-- **Array**  
-  An array of merged objects. The merged objects will have properties from the base array prefixed with `<baseKey>_` (unless `keepBaseKey` is `true`).
+- **Array**
+  - Default mode (`undersampleByKey: null`): one merged row per lower-timeframe row.
+  - Undersample mode (`undersampleByKey` set): one merged row per selected higher-timeframe row, with lower-timeframe fields stored as arrays.
 
 #### Error Handling
 
-- **Order Validation:**  
-  If any input array is not in ascending order according to the target date, an error is thrown.
-
-- **Date Interval Calculation:**  
-  If the computed frequency of date intervals in any array is below half its length (suggesting inconsistent intervals), an error is thrown recommending to add more data to that timeframe.
-
-- **Input Validation:**  
-  If `inputObj` is invalid, if `keepBaseKey` is not boolean, or if duplicate key names are detected, an error is thrown.
+- Throws if any array in `inputObj` is not ascending by `target`.
+- Throws if `keepKey` is not `null`/string, is empty, or does not exist in `inputObj`.
+- Throws if `leakproof` is not boolean.
+- Throws if `undersampleByKey` is not `null`/string, is empty, does not exist in `inputObj`, or points to the lower-timeframe key.
+- Throws if intervals cannot be inferred from provided data.
 
 ---
 
 ## How It Works
 
-1. **Preprocessing:**  
-   Each row in every timeframe array is pre-processed to calculate a `_mill` property, representing the date in milliseconds. The package detects the format (milliseconds, seconds, or string) and converts appropriately.
+1. **Preprocessing**
+   Every row receives an internal `_mill` timestamp in milliseconds.
 
-2. **Common Date Interval Determination:**  
-   For each timeframe, the function computes the most common interval (based on the first few entries determined by `maxFrequencySize`). This helps to define a matching window for merging.
+2. **Interval Detection**
+   For each dataset, the package estimates the most common interval from the first `maxFrequencySize` rows.
 
-3. **Base Array Selection:**  
-   The array with the shortest common date interval is selected as the base array, around which the merging will be performed.
+3. **Lower-Timeframe Detection**
+   The dataset with shortest interval is identified as lower timeframe.
 
-4. **Efficient Merging:**  
-   The base array and secondary arrays are divided into chunks (using the `chunkSize` parameter). A two-pointer search is then conducted across the arrays to merge rows whose timestamps fall within a computed time window.
-   For secondary arrays with larger intervals than the base array, the merge uses the most recently completed secondary candle (open-timestamped OHLCV assumption), preventing future leaks from in-progress higher-timeframe candles.
+4. **Merging**
+   - Default mode: lower timeframe drives output; each other dataset contributes one aligned row.
+   - Undersample mode: selected higher timeframe drives output; lower timeframes contribute all rows in each selected window.
 
-5. **Merged Output:**  
-   Only if a primary row finds matching secondary rows in all arrays (or at least in the arrays where a match is applicable) is the merged object created. Properties are prefixed with their source key for clarity.
+5. **Output Keys**
+   Prefixing is applied per dataset except for the key selected by `keepKey`.
+
+---
+
+## Migration Note
+
+`keepBaseKey` was replaced by `keepKey`.
+
+- Old: `keepBaseKey: true` (only affected base dataset).
+- New: `keepKey: '<datasetKey>'` (can target base or non-base dataset).
 
 ---
 
 ## Contributing
 
-Contributions are welcome! If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request on the repository.
+Contributions are welcome. Feel free to open an issue or submit a pull request.

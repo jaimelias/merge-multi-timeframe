@@ -1,5 +1,6 @@
-export const computedOneObj = (inputObj, chunkSize) => {
+export const computedOneObj = (inputObj, chunkSize, keepKey = null) => {
   const [prefix, arr] = Object.entries(inputObj)[0];
+  const preserveOriginalKey = keepKey === prefix;
   const len = arr.length;
   const output = new Array(len);
 
@@ -10,7 +11,7 @@ export const computedOneObj = (inputObj, chunkSize) => {
     for (let i = start; i < end; i++) {
       const row = {};
       for (const [k, v] of Object.entries(arr[i])) {
-        row[`${prefix}_${k}`] = v;
+        row[preserveOriginalKey ? k : `${prefix}_${k}`] = v;
       }
       output[i] = row;
     }
