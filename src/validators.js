@@ -1,4 +1,4 @@
-export const validateInputObj = (inputObj, keepKey, leakFutureValues, undersampleByKey) => {
+export const validateInputObj = (inputObj, keepKey, leakFutureValues, undersampleByKey, undersampleShape) => {
   if (typeof inputObj !== 'object' || inputObj === null || Array.isArray(inputObj)) {
     throw new Error('Invalid param. "inputObj" must be a non-null object.')
   }
@@ -46,6 +46,11 @@ export const validateInputObj = (inputObj, keepKey, leakFutureValues, undersampl
 
   if (undersampleByKey !== null && !keys.includes(undersampleByKey)) {
     throw new Error(`Invalid param. "undersampleByKey" value "${undersampleByKey}" does not exist in "inputObj".`)
+  }
+
+  const validUndersampleShapes = ['1d', '2d', 'flat']
+  if (typeof undersampleShape !== 'string' || !validUndersampleShapes.includes(undersampleShape)) {
+    throw new Error('Invalid param. "undersampleShape" must be one of "1d", "2d", or "flat".')
   }
 
   return len

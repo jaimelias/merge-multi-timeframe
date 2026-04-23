@@ -55,15 +55,36 @@ const addRowValues = (targetObj, datasetKey, row, keepKey) => {
   }
 };
 
-const addRowsValuesAsArrays = (targetObj, datasetKey, rows, keepKey) => {
-  for (const row of rows) {
+const addUndersampledRows = (targetObj, datasetKey, rows, undersampleShape) => {
+  if (undersampleShape === '2d') {
+    const rowsWithoutMill = new Array(rows.length);
+    for (let i = 0; i < rows.length; i++) {
+      const currentRow = rows[i];
+      const rowObj = {};
+      for (const [k, v] of Object.entries(currentRow)) {
+        if (k === '_mill') continue;
+        rowObj[k] = v;
+      }
+      rowsWithoutMill[i] = rowObj;
+    }
+    targetObj[datasetKey] = rowsWithoutMill;
+    return;
+  }
+
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const row = rows[rowIndex];
     for (const [k, v] of Object.entries(row)) {
       if (k === '_mill') continue;
-      const outputKey = getOutputKey(datasetKey, k, keepKey);
-      if (!Array.isArray(targetObj[outputKey])) {
-        targetObj[outputKey] = [];
+
+      if (undersampleShape === '1d') {
+        const outputKey = `${datasetKey}_${k}`;
+        if (!Array.isArray(targetObj[outputKey])) {
+          targetObj[outputKey] = [];
+        }
+        targetObj[outputKey].push(v);
+      } else {
+        targetObj[`${datasetKey}_[${rowIndex}]_${k}`] = v;
       }
-      targetObj[outputKey].push(v);
     }
   }
 };
@@ -118,9 +139,16 @@ export const mergeMultiTimeframes = ({
   maxFrequencySize = 10,
   keepKey = null,
   leakFutureValues,
-  undersampleByKey = null
+  undersampleByKey = null,
+  undersampleShape = '1d'
 }) => {
-  const inputObjLen = validateInputObj(inputObj, keepKey, leakFutureValues, undersampleByKey);
+  const inputObjLen = validateInputObj(
+    inputObj,
+    keepKey,
+    leakFutureValues,
+    undersampleByKey,
+    undersampleShape
+  );
 
   if (inputObjLen === 1) {
     if (undersampleByKey !== null) {
@@ -229,7 +257,7 @@ export const mergeMultiTimeframes = ({
             break;
           }
 
-          addRowsValuesAsArrays(mergedRow, keyName, matchedRows, keepKey);
+          addUndersampledRows(mergedRow, keyName, matchedRows, undersampleShape);
           continue;
         }
 

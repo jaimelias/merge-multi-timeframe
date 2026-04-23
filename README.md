@@ -13,7 +13,8 @@ A utility for merging multiple arrays of sorted ascending time-series data based
 - **Leakproof Mode:** `leakFutureValues: false` prevents future-value leakage from higher timeframes by aligning with closed-candle availability.
 - **Open-Aligned Mode:** `leakFutureValues: true` aligns by candle open timestamps (can intentionally include future values for backtesting/research workflows).
 - **Selective Key Preservation:** `keepKey` lets you keep original property names for one selected dataset key (base or non-base).
-- **Optional Undersampling:** `undersampleByKey` lets you use a higher-timeframe dataset as output cadence and collect all lower-timeframe values into arrays.
+- **Optional Undersampling:** `undersampleByKey` lets you use a higher-timeframe dataset as output cadence.
+- **Configurable Undersample Output Shape:** `undersampleShape` controls how undersampled lower-timeframe rows are attached (`1d`, `2d`, `flat`).
 
 ---
 
@@ -103,7 +104,8 @@ const mergedData = mergeMultiTimeframes({
   target: 'date',
   undersampleByKey: 'btc_2h', // must be a higher-timeframe key
   keepKey: 'btc_2h',
-  leakFutureValues: true
+  leakFutureValues: true,
+  undersampleShape: '1d' // optional, default '1d'
 });
 
 console.log(mergedData);
@@ -128,7 +130,41 @@ Example output:
 ]
 ```
 
-When `undersampleByKey` is enabled, lower-timeframe fields are emitted as arrays containing all values in the selected higher-timeframe window.
+When `undersampleByKey` is enabled, lower-timeframe rows are embedded into the selected higher-timeframe row using `undersampleShape`.
+
+### Undersample shapes
+
+```js
+// 1d (default)
+mergeMultiTimeframes({
+  inputObj,
+  target: 'date',
+  leakFutureValues: true,
+  undersampleByKey: 'btc_2h',
+  undersampleShape: '1d'
+});
+// => { ...btc_2hRow, btc_1h_close: [10, 11], btc_1h_open: [9, 10], ... }
+
+// 2d
+mergeMultiTimeframes({
+  inputObj,
+  target: 'date',
+  leakFutureValues: true,
+  undersampleByKey: 'btc_2h',
+  undersampleShape: '2d'
+});
+// => { ...btc_2hRow, btc_1h: [{open, high, low, close, volume, date}, {...}] }
+
+// flat
+mergeMultiTimeframes({
+  inputObj,
+  target: 'date',
+  leakFutureValues: true,
+  undersampleByKey: 'btc_2h',
+  undersampleShape: 'flat'
+});
+// => { ...btc_2hRow, btc_1h_[0]_close: 10, btc_1h_[1]_close: 11, ... }
+```
 
 ---
 
@@ -163,13 +199,19 @@ Merges multiple time-series arrays based on common date intervals.
 
 - **`options.undersampleByKey`** (string or `null`, optional, default: `null`)
   If provided, must be a higher-timeframe key. Output cadence becomes that key.
-  Lower-timeframe datasets are collected into arrays per field.
+  Lower-timeframe datasets are merged into the selected higher-timeframe rows.
+
+- **`options.undersampleShape`** (string, optional, default: `'1d'`)
+  Controls shape for undersampled lower-timeframe rows when `undersampleByKey` is set.
+  - `'1d'`: `${datasetKey}_${propertyKey}` arrays (current/default behavior).
+  - `'2d'`: one property per lower timeframe key containing an array of row objects.
+  - `'flat'`: flattened keys `${datasetKey}_[${lowerTimeFrameIndex}]_${propertyKey}`.
 
 #### Returns
 
 - **Array**
   - Default mode (`undersampleByKey: null`): one merged row per lower-timeframe row.
-  - Undersample mode (`undersampleByKey` set): one merged row per selected higher-timeframe row, with lower-timeframe fields stored as arrays.
+  - Undersample mode (`undersampleByKey` set): one merged row per selected higher-timeframe row, with lower-timeframe embedding controlled by `undersampleShape`.
 
 #### Error Handling
 
@@ -178,6 +220,7 @@ Merges multiple time-series arrays based on common date intervals.
 - Throws if `leakFutureValues` is `undefined` or not boolean.  
   Expected behavior: `false` prevents future-value leakage (closed-candle alignment), `true` allows future values via open-date alignment.
 - Throws if `undersampleByKey` is not `null`/string, is empty, does not exist in `inputObj`, or points to the lower-timeframe key.
+- Throws if `undersampleShape` is not one of `'1d'`, `'2d'`, or `'flat'`.
 - Throws if intervals cannot be inferred from provided data.
 
 ---

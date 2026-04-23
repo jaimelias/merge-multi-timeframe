@@ -27,12 +27,14 @@ const init = async () => {
         inputObj,
         chunkSize: 1000,
         target: 'date',
-        keepKey: 'btc_1h',
-        leakFutureValues: false
+        keepKey: 'btc_1d',
+        leakFutureValues: false,
+        undersampleByKey: 'btc_1d',
+        undersampleShape: 'flat'
     })
 
     console.log(`Merged rows: ${mergedArr.length}`)
-    console.log(mergedArr.slice(0, 2))
+    console.log(mergedArr[0])
 }
 
 init()
